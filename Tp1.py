@@ -103,14 +103,14 @@ class TP1:
 
     def Graficar(self):
         print("hacer algo wachin")
-        t,y,H = self.SetEntry()
+        a,r,H = self.SetEntry()
         
         #-----plot-------
         self.axis.clear()
         self.axis.clear()
-        self.axis.set_title('Filter\'s Impulse Response')
+        self.axis.set_title('TP1 ASSD')
         self.axis.set_aspect('auto',adjustable='box')
-        self.axis.plot(t,y)
+        self.axis.plot(a,r)
         self.dataPlot.draw()
         
     
@@ -122,8 +122,8 @@ class TP1:
         T = 1.0 / (1000*f) #Por cada senoidal q meto me toma 100 puntos por frecuencia, es decir muestrea 10 veces mas rapido q la señal siempre
         t = np.linspace(0.0, N*T, N) #toma N puntos entre (0; N/10f)
 
-        FrecuenciaLLA = 1700
-        FSnH = 1700
+        FrecuenciaLLA = 60000
+        FSnH = 170
                                                 ###---ACA DEFINO TODAS MIS FUNCIONES---####
 
         y = np.sin(f * 2.0*np.pi*t)
@@ -135,12 +135,24 @@ class TP1:
         #FAA
         H = signal.TransferFunction([1],[1/(100*2*np.pi),1])
         
-        if(self.check_faa.get()):
+        if(self.check_faa.get() & (self.check_sample_and_hold.get()==0) & (self.check_llave_analog.get()==0) & (self.check_fr.get()==0) ):
             t,y = self.FFA(H,y,t)
+            print("primer if1")
+            
+        if((self.check_faa.get()==0) & (self.check_sample_and_hold.get()) & (self.check_llave_analog.get()==0) & (self.check_fr.get()==0) ):
+           y =  self.sampleAndHold(FSnH,y,N)
+           print("primer if2")
+
+
+        if((self.check_faa.get()==0) & (self.check_sample_and_hold.get()==0) & (self.check_llave_analog.get()) & (self.check_fr.get()==0) ):
+            y = self.analogKey(FrecuenciaLLA,y,N)  
+            print("primer if3")
+  
+        print("primer noif")
 
         
-        
-        return t,y,H    
+        return t,y,H 
+           
 
     #AnalogKey
     def analogKey(self,sampleFreq, signalVector, contSignalPeriod):
