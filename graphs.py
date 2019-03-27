@@ -30,10 +30,13 @@ class GUI:
 
 
         self.label_1 = Label(self.ventana_derecha,text="Caracteristicas de la señal:")
-        self.label_1.grid(row=0,column=2,columnspan=2)
+        self.label_1.grid(row=0,column=2,columnspan=2, sticky=W)
 
         self.label_2 = Label(self.ventana_derecha,text="Aca no se que poner")
         self.label_2.grid(row=5,column=0)
+
+        self.label_3 = Label(self.ventana_derecha, text='Que ver:')
+        self.label_3.grid(row=1, column=5, sticky=W)
 
         SignalList = ('3/2 Seno', 'Cuadratica', 'Cuadrada', 'Triangular')
         self.SignalInputString = StringVar()
@@ -80,6 +83,13 @@ class GUI:
         self.GraphButtom = Button(self.ventana_derecha, text="Graficar", command=self.Graficar)
         self.GraphButtom.grid(row=10,column=6,columnspan=2)
 
+        self.check_frec_graficar = IntVar()
+        self.Check_Graph_Frec = Checkbutton(self.ventana_derecha, text='Frecuencia',variable=self.check_frec_graficar)
+        self.Check_Graph_Frec.grid(row=2,column=5)
+
+        self.check_tiempo_graficar = IntVar()
+        self.Check_Graph_Time = Checkbutton(self.ventana_derecha, text='Tiempo',variable=self.check_tiempo_graficar)
+        self.Check_Graph_Time.grid(row=2,column=6)
 
 
 
