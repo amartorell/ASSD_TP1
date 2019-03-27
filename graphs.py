@@ -30,7 +30,7 @@ class GUI:
 
 
         self.label_1 = Label(self.ventana_derecha,text="Caracteristicas de la señal:")
-        self.label_1.grid(row=0,column=0,columnspan=2)
+        self.label_1.grid(row=0,column=2,columnspan=2)
 
         self.label_2 = Label(self.ventana_derecha,text="Aca no se que poner")
         self.label_2.grid(row=5,column=0)
@@ -39,19 +39,15 @@ class GUI:
         self.SignalInputString = StringVar()
         self.SignalInputString.set(SignalList[0])
         InputSignalMenu = OptionMenu(self.ventana_derecha, self.SignalInputString, *SignalList)
-        InputSignalMenu.grid(row=1, column=0)
+        InputSignalMenu.grid(row=1, column=2)
 
         self.Frecuency = Scale(self.ventana_derecha, from_=150, to=15000, resolution=1, label='Frecuency:', orient=HORIZONTAL)
         self.Frecuency.set(1500)
-        self.Frecuency.grid(row=2, column=0, padx=5, pady=5)
+        self.Frecuency.grid(row=2, column=2, padx=5, pady=5)
 
-        self.Voltage = Scale(self.ventana_derecha, from_=-5, to=5, resolution=0.1, label='Vpp:', orient=HORIZONTAL)
+        self.Voltage = Scale(self.ventana_derecha, from_=0, to=5, resolution=0.1, label='Vpp:', orient=HORIZONTAL)
         self.Voltage.set(5)
-        self.Voltage.grid(row=3, column=0, columnspan=1, padx=5, pady=5)
-
-        self.DutyCycle = Scale(self.ventana_derecha, from_=5, to=95, resolution=5, label='Duty Cycle:', orient=HORIZONTAL)
-        self.DutyCycle.set(50)
-        self.DutyCycle.grid(row=4, column=0, columnspan=1, padx=5, pady=5)
+        self.Voltage.grid(row=3, column=2, columnspan=1, padx=5, pady=5)
 
         self.check_faa = IntVar()
         self.CheckFAA = Checkbutton(self.ventana_derecha, text="FAA", variable=self.check_faa)
@@ -68,8 +64,14 @@ class GUI:
         self.Duty_SH.set(50)
 
         self.check_llave_analog = IntVar()
-        self.CheckANKEY = Checkbutton(self.ventana_derecha, text="Llave analogica", variable=self.check_llave_analog)
+        self.CheckANKEY = Checkbutton(self.ventana_derecha, text="Llave analogica", variable=self.check_llave_analog, command=self.mostrar_config_LLA)
         self.CheckANKEY.grid(row=6,column=4,columnspan=2,padx=8,pady=8)
+
+        self.frecuencia_LLA = Scale(self.ventana_derecha, from_=150, to=15000, label='Frecuencia', orient=HORIZONTAL)
+        self.frecuencia_LLA.set(1000)
+
+        self.duty_cycle_LLA = Scale(self.ventana_derecha, from_=5, to=95, label='Duty cycle', orient=HORIZONTAL)
+        self.duty_cycle_LLA.set(50)
 
         self.check_fr = IntVar()
         self.CheckFR = Checkbutton(self.ventana_derecha, text="FR", variable=self.check_fr)
@@ -105,22 +107,20 @@ class GUI:
 
     def mostrar_config(self):
         if (self.check_sample_and_hold.get()):
-            self.Frecuencia_SH.grid(row=7, column=3, padx=8, pady=8)
-            self.Duty_SH.grid(row=8,column=3,padx=8,pady=8)
+            self.Frecuencia_SH.grid(row=7, column=2, padx=8, pady=8)
+            self.Duty_SH.grid(row=8,column=2,padx=8,pady=8)
         else:
             self.Frecuencia_SH.grid_remove()
             self.Duty_SH.grid_remove()
 
+    def mostrar_config_LLA(self):
+        if (self.check_llave_analog.get()):
+            self.frecuencia_LLA.grid(row=7, column=4, padx=8, pady=8)
+            self.duty_cycle_LLA.grid(row=8, column=4, padx=8, pady=8)
+        else:
+            self.frecuencia_LLA.grid_remove()
+            self.duty_cycle_LLA.grid_remove()
+
 
 b = GUI()
 
-
-
-#def printName():
-#    print("tu vieja en tanga")
-
-#button1 = Button(root, text="button 1", fg="red",command=printName)
-#button1.pack()
-
-
-#root.mainloop()
