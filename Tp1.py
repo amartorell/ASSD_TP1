@@ -122,10 +122,10 @@ class TP1:
         print("hacer algo wachin")
         t,y,NuevoN,T = self.SetEntry()
          #-----plot-------Decidir si frecuencia o en tiempo. set entry me devuelve datos para ambos
-        if(self.check_frec_graficar.get()==0):
+        if((self.check_frec_graficar.get()==0) and  (self.check_tiempo_graficar.get()==1)):
             self.PlotInTime(t,y,0)
             
-        if(self.check_tiempo_graficar.get()==0):
+        if((self.check_tiempo_graficar.get()==0) and (self.check_frec_graficar.get()==1)):
             self.PlotInFrecuency(NuevoN,T,y)  
         
     
@@ -143,11 +143,24 @@ class TP1:
         print("frecuencia de la llave ", FrecuenciaLLA)
         print("frecuencia de snh ", FSnH)
                                                 ###---ACA DEFINO TODAS MIS FUNCIONES---####
-        y = np.sin(f * 2.0*np.pi*t)
-        y = y*self.Voltage.get()
+        
+        if(self.SignalInputString.get() == 'Seno'):
+            y = np.sin(f * 2.0*np.pi*t)
+            y = y*self.Voltage.get()
 
-        #tresmediosdeseno[i] = math.sin(f*2*np.pi*i/T)
-        #triangular 
+        elif(self.SignalInputString.get() == 'Triangular'):
+            y = signal.sawtooth(2 * np.pi * f * t,0.5)
+            y = y*self.Voltage.get()
+
+
+        elif(self.SignalInputString.get() == '3/2 Seno'):
+            y,time = self.threeHalfsSine(t,1/f)
+            y = y*self.Voltage.get()
+            t=time
+
+        else:
+            print("Error")
+
                                                 ###---ACA DEFINO TODOS MIS MODULOS---###
 
         #FAA
@@ -157,7 +170,7 @@ class TP1:
             t,y = self.FFA(H,y,t) #FFA me divide el vector 1.1
             if(self.check_frec_graficar.get()==0):
                 y = y[(int) (len(y)/1.1):] #recorte para ver de sacar mi transitorio que se me arma de que mi señal no viene desde menos inf
-                t= t[(int) (len(T2)/1.1):]
+                t= t[(int) (len(t)/1.1):]
             
             print("1")
 
@@ -189,6 +202,44 @@ class TP1:
 
 
         return t,y,(int) (len(y)/10),T
+
+    #3/2 sine
+    def threeHalfsSine(self,time,period):
+        period=period*(2/3)
+        distance=time[1]-time[0]    #distancia entre valores de la funcion seno. Seria el periodo utilizado para la señal continua
+        auxTime=np.arange(time[0],4*time[len(time)-1]+time[0],distance)
+        auxSine= np.sin(auxTime*2*np.pi*(1/period))
+        timeBase = time[len(time)-1]-time[0]
+        amountOfPeriods = timeBase/period
+        puntitosPorPeriodo=int(period/distance)  #cantidad de puntitos que entran en un periodo
+        #print(puntitosPorPeriodo)
+        puntitosPorPeriodoDeTMS=int(puntitosPorPeriodo*(3/2))
+        #print(puntitosPorPeriodoDeTMS)
+        totalRange = int(puntitosPorPeriodoDeTMS*amountOfPeriods)
+        #print(totalRange)
+        auxCounter=puntitosPorPeriodoDeTMS
+        newFunc = np.zeros(totalRange)                #en este vector ira la amplitud de 3/2 seno, lo hago del doble de largo para que me sorbren lugares
+        #revisar
+        signChange=-1                             #contador de la cantidad de veces que hay un cambio de positivo a negativo
+        state=1
+        newFunc[0]=0
+        for x in range(1,totalRange):
+                    
+            if( ( (np.sign(auxSine[x-1])!=-1) & (np.sign(auxSine[x])==-1) ) | ( (np.sign(auxSine[x-1])!=1) & (np.sign(auxSine[x])==1) ) ):         #hubo un cambio de signo
+                signChange=signChange+1                                          #aumento el contador
+                if(signChange%3==0):        #cuando hay dos cambios de signo de + a - tengo que invertir la funcion seno
+                    state=-state                         #esta variable me indica eso
+                
+
+            if(state==1):
+                newFunc[x]=-auxSine[x]
+            else:
+                newFunc[x]=auxSine[x]
+                
+        newTime=linspace(time[0], time[len(time)-1]*(3/2), len(newFunc))
+        
+        return newFunc, newTime
+
            
 
     #AnalogKey
