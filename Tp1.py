@@ -17,6 +17,7 @@ import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
 from tkinter import messagebox
 from scipy import signal
+import control as ctrl
 
 
 #root = Tk()
@@ -130,7 +131,7 @@ class TP1:
         
     
     def SetEntry(self):
-        N = 100000 #numero de sampleo
+        N = 10000 #numero de sampleo
         print("Numero de Sampleo o Continua Segun tomi = ",N)    # sample spacing
         f = self.Frecuency.get() #mi frecuencia
         print(f)
@@ -163,14 +164,33 @@ class TP1:
 
                                                 ###---ACA DEFINO TODOS MIS MODULOS---###
 
-        #FAA
-        H = signal.TransferFunction([1],[1/(100*2*np.pi),1])
+        #FAA y FRR
+      
+        H1 = signal.TransferFunction([(21442.0*2.0*3.1417)**2.0],[1,((21442.0*2.0*3.1417)/6.04),(((21442*.0*2.0*3.1417))**2)])
+        H2 = signal.TransferFunction([(14150.0*2.0*3.1417)**2.0],[1,(((14150.0*2.0*3.1417))/0.41),(((14150.0*2.0*3.1417))**2)])
         
+        H3 = signal.TransferFunction([(18636.0*2.0*3.1417)**2.0],[1,(((18636.0*2.0*3.1417))/1.84),(((18636.0*2.0*3.1417))**2)])
+        H4 = signal.TransferFunction([(10247.0*2.0*3.1417)**2.0],[1,(((10247.0*2.0*3.1417))/0.54),(((10247.0*2.0*3.1417))**2)])
+        H5= signal.TransferFunction([1/815300],1)
+      #  H1 = ctrl.TransferFunction([(21442.0*2.0*3.1417)**2.0],[1,((21442.0*2.0*3.1417)/6.04),(21442*.0*2.0*3.1417)**2])
+       # H2= ctrl.TransferFunction([(14150.0*2.0*3.1417)**2.0],[1,(((14150.0*2.0*3.1417))/0.41),(14150.0*2.0*3.1417)**2])
+      #  H3 = ctrl.TransferFunction([(18636.0*2.0*3.1417)**2.0],[1,(((18636.0*2.0*3.1417))/1.84),(18636.0*2.0*3.1417)**2])
+      #  H4 = ctrl.TransferFunction([(10247.0*2.0*3.1417)**2.0],[1,(((10247.0*2.0*3.1417))/0.54),(10247.0*2.0*3.1417)**2])
+      #  H5= ctrl.TransferFunction([1/815300],1)
+      #  H=H1*H2*H3*H4*H5
+      #  print(H)
+        #H = H1*H2*H3*H4
+        #print(H)
+        #print(H(15))
+       # H= signal.TransferFunction([3.357e+33],[1,6.717e+04,2.535e+09,7.154e+13,1.407e+18,2.074e+22,2.147e+26,1.309e+30,3.357e+33])
+        #H= signal.TransferFunction([3.357e+8],[1,6.717e+05,2.535e+04,7.154e+6,1.407e+8,2.074e+6,2.147e+6,1.309e+6,3.357e+10])
+
+
         if(self.check_faa.get()):
-            t,y = self.FFA(H,y,t) #FFA me divide el vector 1.1
+            t,y = self.FFA(H1,H2,H3,H4,y,t) #FFA me divide el vector 1.1
             if(self.check_frec_graficar.get()==0):
-                y = y[(int) (len(y)/1.1):] #recorte para ver de sacar mi transitorio que se me arma de que mi señal no viene desde menos inf
-                t= t[(int) (len(t)/1.1):]
+                y = y[(int) (len(y)/2):] #recorte para ver de sacar mi transitorio que se me arma de que mi señal no viene desde menos inf
+                t= t[(int) (len(t)/2):]
             
             print("1")
 
@@ -300,12 +320,18 @@ class TP1:
 
 
     #Filtro FFA
-    def FFA(self,H,y,t):
-        (T2,YAfterFilter,x2) = signal.lsim(H, y, t, X0=0, interp=1)
-        return T2, YAfterFilter        
+    def FFA(self,H1,H2,H3,H4,y,t):
+        (T2,y1,x2) = signal.lsim(H4, y, t, X0=0, interp=0)
+        (T3,y2,x2) = signal.lsim(H2, y1, T2, X0=0, interp=0)
+        (T4,y3,x2) = signal.lsim(H3, y2, T3, X0=0, interp=0)
+        (T5,YAfterFilter,x2) = signal.lsim(H1, y3, T4, X0=0, interp=0)
+
+       
+
+        return T5, YAfterFilter        
 
     def FFR(self,H,y,t):
-        (T2,YAfterFilter,x2) = signal.lsim(H, y, t, X0=0, interp=1)
+        (T2,YAfterFilter,x2) = signal.lsim(H, y, t, X0=0, interp=0)
         return T2, YAfterFilter        
  
     
