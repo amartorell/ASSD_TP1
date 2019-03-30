@@ -131,7 +131,7 @@ class TP1:
         
     
     def SetEntry(self):
-        N = 10000 #numero de sampleo
+        N = 100000 #numero de sampleo
         print("Numero de Sampleo o Continua Segun tomi = ",N)    # sample spacing
         f = self.Frecuency.get() #mi frecuencia
         print(f)
@@ -166,18 +166,17 @@ class TP1:
 
         #FAA y FRR
       
-        H1 = signal.TransferFunction([(21442.0*2.0*3.1417)**2.0],[1,((21442.0*2.0*3.1417)/6.04),(((21442*.0*2.0*3.1417))**2)])
-        H2 = signal.TransferFunction([(14150.0*2.0*3.1417)**2.0],[1,(((14150.0*2.0*3.1417))/0.41),(((14150.0*2.0*3.1417))**2)])
-        
-        H3 = signal.TransferFunction([(18636.0*2.0*3.1417)**2.0],[1,(((18636.0*2.0*3.1417))/1.84),(((18636.0*2.0*3.1417))**2)])
-        H4 = signal.TransferFunction([(10247.0*2.0*3.1417)**2.0],[1,(((10247.0*2.0*3.1417))/0.54),(((10247.0*2.0*3.1417))**2)])
-        H5= signal.TransferFunction([1/815300],1)
-      #  H1 = ctrl.TransferFunction([(21442.0*2.0*3.1417)**2.0],[1,((21442.0*2.0*3.1417)/6.04),(21442*.0*2.0*3.1417)**2])
-       # H2= ctrl.TransferFunction([(14150.0*2.0*3.1417)**2.0],[1,(((14150.0*2.0*3.1417))/0.41),(14150.0*2.0*3.1417)**2])
-      #  H3 = ctrl.TransferFunction([(18636.0*2.0*3.1417)**2.0],[1,(((18636.0*2.0*3.1417))/1.84),(18636.0*2.0*3.1417)**2])
-      #  H4 = ctrl.TransferFunction([(10247.0*2.0*3.1417)**2.0],[1,(((10247.0*2.0*3.1417))/0.54),(10247.0*2.0*3.1417)**2])
+        H1 = signal.TransferFunction([(21442.0*2.0*pi)**2.0],[1,(21442.0*2.0*pi)/6.04,(21442*2.0*pi)**2])
+        H2 = signal.TransferFunction([(14150.0*2.0*pi)**2.0],[1,(14150.0*2.0*pi)/0.41,(14150.0*2.0*pi)**2])
+        H3 = signal.TransferFunction([(18636.0*2.0*pi)**2.0],[1,(18636.0*2.0*pi)/1.84,(18636.0*2.0*pi)**2])
+        H4 = signal.TransferFunction([(10247.0*2.0*pi)**2.0],[1,(10247.0*2.0*pi)/0.54,(10247.0*2.0*pi)**2])
+        #H5= signal.TransferFunction([1/815300],1)
+        # H1 = ctrl.TransferFunction([(21442.0*2.0*pi)**2.0],[1, (21442.0*2.0*pi)/123561.04, (21442*2.0*pi)**2])
+       # H2= ctrl.TransferFunction([(14150.0*2.0*pi)**2.0],[1,(14150.0*2.0*pi)/0.41,(14150.0*2.0*pi)**2])
+        #H3 = ctrl.TransferFunction([(18636.0*2.0*pi)**2.0],[1,(18636.0*2.0*pi)/1.84,(18636.0*2.0*pi)**2])
+      #  H4 = ctrl.TransferFunction([(10247.0*2.0*pi)**2.0],[1,(10247.0*2.0*pi)/0.54,(10247.0*2.0*pi)**2])
       #  H5= ctrl.TransferFunction([1/815300],1)
-      #  H=H1*H2*H3*H4*H5
+      #  H=H1*H2*H3*H4
       #  print(H)
         #H = H1*H2*H3*H4
         #print(H)
@@ -196,9 +195,9 @@ class TP1:
 
         if(self.check_sample_and_hold.get()):
            y = self.sampleAndHold(FSnH,y,distanceBetweenSamples)
-           if(self.check_frec_graficar.get()==0):
-                y = y[(int) (len(y)/1.5):] #recorte para ver de sacar mi transitorio que se me arma de que mi señal no viene desde menos inf
-                t = t[(int) (len(t)/1.5):]
+          #if(self.check_frec_graficar.get()==0):
+           #     y = y[(int) (len(y)/1.5):] #recorte para ver de sacar mi transitorio que se me arma de que mi señal no viene desde menos inf
+            #    t = t[(int) (len(t)/1.5):]
            
            print("2")
 
@@ -206,14 +205,15 @@ class TP1:
            y = self.analogKey(FrecuenciaLLA,y,distanceBetweenSamples,self.duty_cycle_LLA.get()/100)
            print("3")
            print(self.duty_cycle_LLA.get()/100)
-           if(self.check_frec_graficar.get()==0):
-                y = y[(int) (len(y)/1.5):] #recorte para ver de sacar mi transitorio que se me arma de que mi señal no viene desde menos inf
-                t = t[(int) (len(t)/1.5):]
+           #if(self.check_frec_graficar.get()==0):
+               # y = y[(int) (len(y)/1.5):] #recorte para ver de sacar mi transitorio que se me arma de que mi señal no viene desde menos inf
+               # t = t[(int) (len(t)/1.5):]
            
 
         
         if(self.check_fr.get()):
-           t,y = self.FFR(H,y,t)
+           print(len(y),len(t))
+           t,y = self.FFA(H1,H2,H3,H4,y,t)
            if(self.check_frec_graficar.get()==0):
                 y = y[(int) (len(y)/2):] #recorte para ver de sacar mi transitorio que se me arma de que mi señal no viene desde menos inf
                 t= t[(int) (len(t)/2):]
@@ -322,16 +322,19 @@ class TP1:
     #Filtro FFA
     def FFA(self,H1,H2,H3,H4,y,t):
         (T2,y1,x2) = signal.lsim(H4, y, t, X0=0, interp=0)
-        (T3,y2,x2) = signal.lsim(H2, y1, T2, X0=0, interp=0)
-        (T4,y3,x2) = signal.lsim(H3, y2, T3, X0=0, interp=0)
-        (T5,YAfterFilter,x2) = signal.lsim(H1, y3, T4, X0=0, interp=0)
+        (T3,y2,x2) = signal.lsim(H2, y1, t, X0=0, interp=0)
+        (T4,y3,x2) = signal.lsim(H3, y2, t, X0=0, interp=0)
+        (T5,YAfterFilter,x2) = signal.lsim(H1, y3, t, X0=0, interp=0)
 
        
 
-        return T5, YAfterFilter        
+        return T5, YAfterFilter      
 
-    def FFR(self,H,y,t):
-        (T2,YAfterFilter,x2) = signal.lsim(H, y, t, X0=0, interp=0)
+    def FFR(self,H1,H2,H3,H4,y,t):
+        (T2,y1,x2) = signal.lsim(H4, y, t, X0=0, interp=0)
+        (T3,y2,x2) = signal.lsim(H2, y1, T2, X0=0, interp=0)
+        (T4,y3,x2) = signal.lsim(H3, y2, T3, X0=0, interp=0)
+        (T2,YAfterFilter,x2) = signal.lsim(H1, y3, T4, X0=0, interp=0)
         return T2, YAfterFilter        
  
     
