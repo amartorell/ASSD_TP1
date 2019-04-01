@@ -120,7 +120,6 @@ class TP1:
         self.root.mainloop()
 
     def Graficar(self):
-        print("hacer algo wachin")
         t,y,NuevoN,T = self.SetEntry()
          #-----plot-------Decidir si frecuencia o en tiempo. set entry me devuelve datos para ambos
         if((self.check_frec_graficar.get()==0) and  (self.check_tiempo_graficar.get()==1)):
@@ -132,7 +131,6 @@ class TP1:
     
     def SetEntry(self):
         N = 100000 #numero de sampleo
-        print("Numero de Sampleo o Continua Segun tomi = ",N)    # sample spacing
         f = self.Frecuency.get() #mi frecuencia
         print(f)
         T = 1.0 / (1000*f) #Por cada senoidal q meto me toma 1000 puntos por frecuencia, es decir muestrea 10 veces mas rapido q la señal siempre
@@ -141,8 +139,7 @@ class TP1:
 
         FrecuenciaLLA = self.frecuencia_LLA.get()
         FSnH = self.Frecuencia_SH.get()
-        print("frecuencia de la llave ", FrecuenciaLLA)
-        print("frecuencia de snh ", FSnH)
+        
                                                 ###---ACA DEFINO TODAS MIS FUNCIONES---####
         
         if(self.SignalInputString.get() == 'Seno'):
@@ -194,12 +191,12 @@ class TP1:
             print("1")
 
         if(self.check_sample_and_hold.get()):
-           y = self.sampleAndHold(FSnH,y,distanceBetweenSamples)
+           y = self.sampleAndHold(FSnH,y,distanceBetweenSamples, self.Duty_SH.get()/100)
           #if(self.check_frec_graficar.get()==0):
            #     y = y[(int) (len(y)/1.5):] #recorte para ver de sacar mi transitorio que se me arma de que mi señal no viene desde menos inf
             #    t = t[(int) (len(t)/1.5):]
            
-           print("2")
+           print("2 ", self.Duty_SH.get())
 
         if(self.check_llave_analog.get()):
            y = self.analogKey(FrecuenciaLLA,y,distanceBetweenSamples,self.duty_cycle_LLA.get()/100)
@@ -282,19 +279,22 @@ class TP1:
         return outputSignal 
 
     #Sample&Hold
-    def sampleAndHold(self,sampleFreq, signalVector, distance):
+    def sampleAndHold(self,sampleFreq, signalVector, distance, dutyCycle):
         outputSignal = signalVector
         auxCounter=1/sampleFreq
-        holdValue=signalVector[0]
+        sampleCondition=auxCounter*dutyCycle
         for x in range(len(signalVector)):
-            if(auxCounter<=0):
+            if(auxCounter>=sampleCondition):
                 holdValue=signalVector[x]
                 outputSignal[x]=holdValue
-                auxCounter=1/sampleFreq            
+                auxCounter=auxCounter-distance            
             else:
+                if(auxCounter<=0):
+                    auxCounter=1/sampleFreq         #reseteo el periodo
                 outputSignal[x]=holdValue
                 auxCounter=auxCounter-distance
         return outputSignal
+
         #ploteo de funcion en tiempo
     def PlotInTime(self,t,y,tipo):
         if(tipo==0):
