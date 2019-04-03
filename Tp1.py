@@ -18,7 +18,7 @@ import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
 from tkinter import messagebox
 from scipy import signal
-import control as ctrl
+#import control as ctrl
 
 
 #root = Tk()
@@ -48,7 +48,7 @@ class TP1:
         self.label_3 = Label(self.ventana_derecha, text='Que ver:')
         self.label_3.grid(row=1, column=5, sticky=W)
 
-        SignalList = ('Seno', '3/2 Seno','Triangular')
+        SignalList = ('Seno', '3/2 Seno','Triangular', 'AM modulada')
         self.SignalInputString = StringVar()
         self.SignalInputString.set(SignalList[0])
         InputSignalMenu = OptionMenu(self.ventana_derecha, self.SignalInputString, *SignalList)
@@ -161,6 +161,10 @@ class TP1:
             y = y*self.Voltage.get()
             t=time
 
+        elif(self.SignalInputString.get() == 'AM modulada'):
+            y = 0.5*np.cos(2*np.pi*t*1.8*f)+0.5*np.cos(2*np.pi*t*2.2*f)+np.cos(2*np.pi*t*2*f)
+            y = y*self.Voltage.get()
+
         else:
             print("Error")
 
@@ -263,8 +267,24 @@ class TP1:
         newTime=linspace(time[0], time[len(time)-1]*(3/2), len(newFunc))
         
         return newFunc, newTime
+     
 
-           
+    def subNyquistFrequency (Fc,B):
+        m=0
+        Fsmax=0
+        Fsmin=0
+        while(Fsmax>=Fsmin):
+            m=m+1
+            Fsmax=(2*Fc-B)/m
+            Fsmin=(2*Fc+B)/(m+1)
+            print ("maxfreq", Fsmax, "minfreq", Fsmin, "m", m)
+        m=m-1 #me quedo con el ultimo que cumple
+        if(m==0):
+            print("no hay frecuencia sub nyquist con la que se pueda samplear")
+        Fsmax=(2*Fc-B)/m
+        Fsmin=(2*Fc+B)/(m+1)
+        print((Fsmax + Fsmin)/2)
+        return (Fsmax + Fsmin)/2
 
     #AnalogKey
     def analogKey(self,sampleFreq, signalVector, distance, dutyCycle):
