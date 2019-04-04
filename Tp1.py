@@ -55,7 +55,7 @@ class TP1:
         InputSignalMenu = OptionMenu(self.ventana_derecha, self.SignalInputString, *SignalList)
         InputSignalMenu.grid(row=1, column=2)
 
-        self.Frecuency = Scale(self.ventana_derecha, from_=1500, to=31000, resolution=10, label='Frecuency:', orient=HORIZONTAL)
+        self.Frecuency = Scale(self.ventana_derecha, from_=500, to=31000, resolution=10, label='Frecuency:', orient=HORIZONTAL)
         self.Frecuency.set(1500)
         self.Frecuency.grid(row=2, column=2, padx=5, pady=5)
 
@@ -71,7 +71,7 @@ class TP1:
         self.CheckSAH = Checkbutton(self.ventana_derecha, text="Sample and Hold", variable=self.check_sample_and_hold, command=self.mostrar_config)
         self.CheckSAH.grid(row=6,column=2,columnspan=2,padx=8,pady=8)
 
-        self.Frecuencia_SH=Scale(self.ventana_derecha, from_=13000, to=65000, resolution=50, label='Frecuencia S&h', orient=HORIZONTAL)
+        self.Frecuencia_SH=Scale(self.ventana_derecha, from_=1000, to=65000, resolution=50, label='Frecuencia S&h', orient=HORIZONTAL)
         self.Frecuencia_SH.set(30000)
 
         self.Duty_SH=Scale(self.ventana_derecha, from_=5, to=95, label='Duty cycle S&H', orient=HORIZONTAL)
@@ -81,7 +81,7 @@ class TP1:
         self.CheckANKEY = Checkbutton(self.ventana_derecha, text="Llave analogica", variable=self.check_llave_analog, command=self.mostrar_config_LLA)
         self.CheckANKEY.grid(row=6,column=4,columnspan=2,padx=8,pady=8)
 
-        self.frecuencia_LLA = Scale(self.ventana_derecha, from_=13000, to=65000,resolution=50, label='Frecuencia', orient=HORIZONTAL)
+        self.frecuencia_LLA = Scale(self.ventana_derecha, from_=1000, to=65000,resolution=50, label='Frecuencia', orient=HORIZONTAL)
         self.frecuencia_LLA.set(3000)
 
         self.duty_cycle_LLA = Scale(self.ventana_derecha, from_=5, to=95, label='Duty cycle', orient=HORIZONTAL)
@@ -183,9 +183,10 @@ class TP1:
             y = y*self.Voltage.get()
             t=time
        
-        elif(self.SignalInputString.get() == 'AM modulada'):
+        elif(self.SignalInputString.get() == 'AM Modulada'):
             y = 0.5*np.cos(2*np.pi*t*1.8*f)+0.5*np.cos(2*np.pi*t*2.2*f)+np.cos(2*np.pi*t*2*f)
             y = y*self.Voltage.get()
+            self.subNyquistFrequency(3000, 600)
 
         else:
             print("Error")
@@ -217,10 +218,10 @@ class TP1:
     #3/2 sine
     
     def threeHalfsSine(self,time,period):
-        period=period*(2/3)
+        period=period*(2/3)  #periodo senoidal
         distance=time[1]-time[0]    #distancia entre valores de la funcion seno. Seria el periodo utilizado para la señal continua
-        auxTime=np.arange(time[0],4*time[len(time)-1]+time[0],distance)
-        auxSine= np.sin(auxTime*2*np.pi*(1/period))
+        auxTime=np.arange(time[0],4*time[len(time)-1]+time[0],distance)  #base de tiempo mayor para la senoidal de referencia
+        auxSine= np.sin(auxTime*2*np.pi*(1/period))     #seno de referencia
         timeBase = time[len(time)-1]-time[0]
         amountOfPeriods = timeBase/period
         puntitosPorPeriodo=int(period/distance)  #cantidad de puntitos que entran en un periodo
@@ -231,7 +232,6 @@ class TP1:
         #print(totalRange)
         auxCounter=puntitosPorPeriodoDeTMS
         newFunc = np.zeros(totalRange)                #en este vector ira la amplitud de 3/2 seno, lo hago del doble de largo para que me sorbren lugares
-        #revisar
         signChange=-1                             #contador de la cantidad de veces que hay un cambio de positivo a negativo
         state=1
         newFunc[0]=0
@@ -291,6 +291,7 @@ class TP1:
         return outputSignal
 
     def subNyquistFrequency (self,Fc,B):
+        print("Rango de frecuencias subNyquist con AM modulada a 1.5k Hz")
         m=0
         Fsmax=0
         Fsmin=0
@@ -298,14 +299,13 @@ class TP1:
             m=m+1
             Fsmax=(2*Fc-B)/m
             Fsmin=(2*Fc+B)/(m+1)
-            print ("maxfreq", Fsmax, "minfreq", Fsmin, "m", m)
+            print ("Para m = ", m, ": Frecuencia maxima =", Fsmax, "Frecuencia minima", Fsmin)
         m=m-1 #me quedo con el ultimo que cumple
         if(m==0):
             print("no hay frecuencia sub nyquist con la que se pueda samplear")
         Fsmax=(2*Fc-B)/m
         Fsmin=(2*Fc+B)/(m+1)
-        print((Fsmax + Fsmin)/2)
-        return (Fsmax + Fsmin)/2
+        print("Frecuencia de sampleo subNyquist para máximo m:", (Fsmax + Fsmin)/2)
 
         #ploteo de funcion en tiempo
     def PlotInTime(self,t,y,tipo):
@@ -372,3 +372,4 @@ class TP1:
 
 if __name__ == "__main__":
     ex = TP1()
+    ex.subNyquistFrequency(3000,600)
