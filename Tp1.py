@@ -18,7 +18,7 @@ import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
 from tkinter import messagebox
 from scipy import signal
-#import control as ctrl
+import control as ctrl
 
 
 #root = Tk()
@@ -48,7 +48,7 @@ class TP1:
         self.label_3 = Label(self.ventana_derecha, text='Que ver:')
         self.label_3.grid(row=1, column=5, sticky=W)
 
-        SignalList = ('Seno', '3/2 Seno','Triangular', 'AM modulada')
+        SignalList = ('Seno', '3/2 Seno','Triangular',"AM Modulada")
         self.SignalInputString = StringVar()
         self.SignalInputString.set(SignalList[0])
         InputSignalMenu = OptionMenu(self.ventana_derecha, self.SignalInputString, *SignalList)
@@ -70,7 +70,7 @@ class TP1:
         self.CheckSAH = Checkbutton(self.ventana_derecha, text="Sample and Hold", variable=self.check_sample_and_hold, command=self.mostrar_config)
         self.CheckSAH.grid(row=6,column=2,columnspan=2,padx=8,pady=8)
 
-        self.Frecuencia_SH=Scale(self.ventana_derecha, from_=30000, to=65000, label='Frecuencia S&h', orient=HORIZONTAL)
+        self.Frecuencia_SH=Scale(self.ventana_derecha, from_=13000, to=65000, resolution=50, label='Frecuencia S&h', orient=HORIZONTAL)
         self.Frecuencia_SH.set(30000)
 
         self.Duty_SH=Scale(self.ventana_derecha, from_=5, to=95, label='Duty cycle S&H', orient=HORIZONTAL)
@@ -125,12 +125,13 @@ class TP1:
         t,y,NuevoN,T = self.SetEntry()
          #-----plot-------Decidir si frecuencia o en tiempo. set entry me devuelve datos para ambos
         if((self.check_frec_graficar.get()==0) and  (self.check_tiempo_graficar.get()==1)):
+            taux = np.linspace(0.0, len(t)*T, len(t)) 
             self.PlotInTime(t,y,0)
             
         if((self.check_tiempo_graficar.get()==0) and (self.check_frec_graficar.get()==1)):
             self.PlotInFrecuency(NuevoN,T,y)  
         
-        np.savetxt("Sample1&0.csv", np.column_stack((t,y)), delimiter=",")
+        np.savetxt("Medicion17.2.csv", np.column_stack((t,y)), delimiter=",")
     
     def SetEntry(self):
         N = 100000 #numero de sampleo
@@ -160,7 +161,7 @@ class TP1:
             y,time = self.threeHalfsSine(t,1/f)
             y = y*self.Voltage.get()
             t=time
-
+       
         elif(self.SignalInputString.get() == 'AM modulada'):
             y = 0.5*np.cos(2*np.pi*t*1.8*f)+0.5*np.cos(2*np.pi*t*2.2*f)+np.cos(2*np.pi*t*2*f)
             y = y*self.Voltage.get()
@@ -172,7 +173,7 @@ class TP1:
 
         #FAA y FRR
       
-        H1 = signal.TransferFunction([-(21442.0*2.0*pi)**2.0],[1,(21442.0*2.0*pi)/6.04,(21442*2.0*pi)**2])
+        H1 = signal.TransferFunction([((21442.0*2.0*pi)**2.0)],[1,(21442.0*2.0*pi)/6.04,(21442*2.0*pi)**2])
         H2 = signal.TransferFunction([(14150.0*2.0*pi)**2.0],[1,(14150.0*2.0*pi)/0.41,(14150.0*2.0*pi)**2])
         H3 = signal.TransferFunction([(18636.0*2.0*pi)**2.0],[1,(18636.0*2.0*pi)/1.84,(18636.0*2.0*pi)**2])
         H4 = signal.TransferFunction([(10247.0*2.0*pi)**2.0],[1,(10247.0*2.0*pi)/0.54,(10247.0*2.0*pi)**2])
@@ -267,9 +268,46 @@ class TP1:
         newTime=linspace(time[0], time[len(time)-1]*(3/2), len(newFunc))
         
         return newFunc, newTime
-     
 
-    def subNyquistFrequency (Fc,B):
+           
+
+    #AnalogKey
+    def analogKey(self,sampleFreq, signalVector, distance, dutyCycle):
+        auxCounter=1/sampleFreq     #trabajo con periodo
+        outputSignal = signalVector
+        openKeyCondition=auxCounter*dutyCycle
+        #bottomLimit=auxCounter-topLimit
+        for x in range(len(signalVector)):
+            if(auxCounter>=openKeyCondition):
+                outputSignal[x]=0
+                auxCounter=auxCounter-distance    
+            else:
+                if(auxCounter<=0):
+                    auxCounter=1/sampleFreq         #reseteo el periodo
+                outputSignal[x]=signalVector[x]
+                auxCounter=auxCounter-distance
+
+                
+        return outputSignal 
+
+    #Sample&Hold
+    def sampleAndHold(self,sampleFreq, signalVector, distance, dutyCycle):
+        outputSignal = signalVector
+        auxCounter=1/sampleFreq
+        sampleCondition=auxCounter*dutyCycle
+        for x in range(len(signalVector)):
+            if(auxCounter>=sampleCondition):
+                holdValue=signalVector[x]
+                outputSignal[x]=signalVector[x]
+                auxCounter=auxCounter-distance            
+            else:
+                if(auxCounter<=0):
+                    auxCounter=1/sampleFreq         #reseteo el periodo
+                outputSignal[x]=holdValue
+                auxCounter=auxCounter-distance
+        return outputSignal
+
+    def subNyquistFrequency (self,Fc,B):
         m=0
         Fsmax=0
         Fsmin=0
@@ -286,48 +324,15 @@ class TP1:
         print((Fsmax + Fsmin)/2)
         return (Fsmax + Fsmin)/2
 
-    #AnalogKey
-    def analogKey(self,sampleFreq, signalVector, distance, dutyCycle):
-        auxCounter=1/sampleFreq     #trabajo con periodo
-        outputSignal = signalVector
-        openKeyCondition=auxCounter*dutyCycle
-        #bottomLimit=auxCounter-topLimit
-        for x in range(len(signalVector)):
-            if(auxCounter>=openKeyCondition):
-                outputSignal[x]=signalVector[x]
-                auxCounter=auxCounter-distance    
-            else:
-                if(auxCounter<=0):
-                    auxCounter=1/sampleFreq         #reseteo el periodo
-                outputSignal[x]=0
-                auxCounter=auxCounter-distance
-
-                
-        return outputSignal 
-
-    #Sample&Hold
-    def sampleAndHold(self,sampleFreq, signalVector, distance, dutyCycle):
-        outputSignal = signalVector
-        auxCounter=1/sampleFreq
-        sampleCondition=auxCounter*dutyCycle
-        for x in range(len(signalVector)):
-            if(auxCounter>=sampleCondition):
-                holdValue=signalVector[x]
-                outputSignal[x]=holdValue
-                auxCounter=auxCounter-distance            
-            else:
-                if(auxCounter<=0):
-                    auxCounter=1/sampleFreq         #reseteo el periodo
-                outputSignal[x]=holdValue
-                auxCounter=auxCounter-distance
-        return outputSignal
-
         #ploteo de funcion en tiempo
     def PlotInTime(self,t,y,tipo):
         if(tipo==0):
             self.axis.clear()
             self.axis.set_title('TP1 ASSD')
             self.axis.set_aspect('auto',adjustable='box')
+            self.axis.set_xlabel("Tiempo en s")
+            self.axis.set_ylabel("Tensión V")
+            self.axis.grid()
             self.axis.plot(t,y)
             self.dataPlot.draw()
         elif (tipo==1):
@@ -339,7 +344,9 @@ class TP1:
         self.axis.clear()
         self.axis.set_title('TP1 ASSD')
         self.axis.set_aspect('auto',adjustable='box')
-
+        self.axis.set_xlabel("Frecuencia en Hz")
+        self.axis.set_ylabel("Tensión en dB")
+        self.axis.grid()
         yfb = fft(y)
         fb = np.linspace(0.0, 1/(2.0*T),(int) (N/2)) #recorto por dos mi vector de frecuencias porque solo voy a estar con las positivas
         self.axis.loglog(fb[1:N//2], 2.0/N * np.abs(yfb[1:N//2]), '-b')
@@ -352,7 +359,7 @@ class TP1:
         (T3,y2,x2) = signal.lsim(H2, y1, t, X0=0, interp=0)
         (T4,y3,x2) = signal.lsim(H3, y2, t, X0=0, interp=0)
         (T5,YAfterFilter,x2) = signal.lsim(H4, y3, t, X0=0, interp=0)
-        return T5, YAfterFilter      
+        return T5, -YAfterFilter      
 
 
     def FFR(self,H1,H2,H3,H4,y,t):
