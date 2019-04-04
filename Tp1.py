@@ -20,12 +20,12 @@ from tkinter import messagebox
 from scipy import signal
 import control as ctrl
 
-
-#root = Tk()
-
 class TP1:
 
     def __init__(self):
+
+        #------------------------------------Set Tk inter and Grid----------------------------------
+
         self.root = Tk()
         self.root.title("ASSD: Entorno de Simulacion")
         self.root.resizable(False,False)
@@ -38,14 +38,15 @@ class TP1:
         self.ventana_inferior = Frame(self.root)
         self.ventana_inferior.grid(row=1)
 
+        #-----------------------------------Set Check Boxes Lists and Labels------------------------------
 
         self.label_1 = Label(self.ventana_derecha,text="Caracteristicas de la señal:")
         self.label_1.grid(row=0,column=2,columnspan=2, sticky=W)
 
-        self.label_2 = Label(self.ventana_derecha,text="Aca no se que poner")
+        self.label_2 = Label(self.ventana_derecha,text="Etapas:")
         self.label_2.grid(row=5,column=0)
 
-        self.label_3 = Label(self.ventana_derecha, text='Que ver:')
+        self.label_3 = Label(self.ventana_derecha, text='Tiempo o Frecuencia:')
         self.label_3.grid(row=1, column=5, sticky=W)
 
         SignalList = ('Seno', '3/2 Seno','Triangular',"AM Modulada")
@@ -101,10 +102,9 @@ class TP1:
         self.Check_Graph_Time = Checkbutton(self.ventana_derecha, text='Tiempo',variable=self.check_tiempo_graficar)
         self.Check_Graph_Time.grid(row=2,column=6)
          
-    
 
-# ------------------------------------------------------------------------------------------------
-# metiendo el grafico
+#-----------------------------------Set Graph--------------------------------------------
+
         graph = Canvas(self.ventana_izquierda)
         graph.grid(row=1, columnspan=1000, padx=10, pady=10)
         f = Figure()
@@ -116,14 +116,22 @@ class TP1:
         self.nav = NavigationToolbar2Tk(self.dataPlot, self.ventana_inferior)
         self.nav.update()
         self.dataPlot._tkcanvas.pack(side=TOP, expand=True)
-#--------------------------------------------------------------------------------------------------
+
+#-----------------------------RootMainLoop----------------------------------------------------
 
         self.root.mainloop()
 
+#------------------------------Funcion Graficar-------
+#Decidir si en Frecuencia o en Timepo. Toma valores de checkboxes de arriba para verificar esto
+#Ambos seleccionados (F o T) o ambos sin seleccionar no hace nada.
+#Recibe vectores datos de SetEntry
+#LLama a plot tmeo plot frec respectivamente.
+
+
     def Graficar(self):
-        print("hacer algo wachin")
+        
         t,y,NuevoN,T = self.SetEntry()
-         #-----plot-------Decidir si frecuencia o en tiempo. set entry me devuelve datos para ambos
+       
         if((self.check_frec_graficar.get()==0) and  (self.check_tiempo_graficar.get()==1)):
             taux = np.linspace(0.0, len(t)*T, len(t)) 
             self.PlotInTime(t,y,0)
@@ -131,21 +139,34 @@ class TP1:
         if((self.check_tiempo_graficar.get()==0) and (self.check_frec_graficar.get()==1)):
             self.PlotInFrecuency(NuevoN,T,y)  
         
-       # np.savetxt("Medicion17.2.csv", np.column_stack((t,y)), delimiter=",")
-    
+        """
+        Linea de codigo pensada para guardar lso vectores resultantes del grafico en un csv dentro de la carpeta del programa.
+        Ojo que cada vez que se toca graficar se solapa el csv si no se cambia el nombre del .csv
+        np.savetxt("Medicion17.2.csv", np.column_stack((t,y)), delimiter=",")
+        """
+
+#-------------Funcion Set Entry----------------------------------
+#Toma los datos de los check boxes y de las Lists para saber que graficar y como hacerlo.
+#Genera las funciones correspondientes adecuadas a la lista de funciones seleccionada
+#Genera un vector de tiempo adecuado a la frecuencia de dicha señal
+
     def SetEntry(self):
-        N = 100000 #numero de sampleo
-        print("Numero de Sampleo o Continua Segun tomi = ",N)    # sample spacing
-        f = self.Frecuency.get() #mi frecuencia
-        print(f)
+
+        N = 100000 
+
+        f = self.Frecuency.get() 
         T = 1.0 / (1000*f) #Por cada senoidal q meto me toma 1000 puntos por frecuencia, es decir muestrea 10 veces mas rapido q la señal siempre
         t = np.linspace(0.0, N*T, N*10) #toma N puntos entre (0; N/1000f)
-        distanceBetweenSamples=t[1]-t[0]
+        distanceBetweenSamples=t[1]-t[0] 
 
         FrecuenciaLLA = self.frecuencia_LLA.get()
         FSnH = self.Frecuencia_SH.get()
-        print("frecuencia de la llave ", FrecuenciaLLA)
-        print("frecuencia de snh ", FSnH)
+
+        H1 = signal.TransferFunction([((21442.0*2.0*pi)**2.0)],[1,(21442.0*2.0*pi)/6.04,(21442*2.0*pi)**2])
+        H2 = signal.TransferFunction([(14150.0*2.0*pi)**2.0],[1,(14150.0*2.0*pi)/0.41,(14150.0*2.0*pi)**2])
+        H3 = signal.TransferFunction([(18636.0*2.0*pi)**2.0],[1,(18636.0*2.0*pi)/1.84,(18636.0*2.0*pi)**2])
+        H4 = signal.TransferFunction([(10247.0*2.0*pi)**2.0],[1,(10247.0*2.0*pi)/0.54,(10247.0*2.0*pi)**2])
+        
                                                 ###---ACA DEFINO TODAS MIS FUNCIONES---####
         
         if(self.SignalInputString.get() == 'Seno'):
@@ -172,70 +193,29 @@ class TP1:
                                                 ###---ACA DEFINO TODOS MIS MODULOS---###
 
         #FAA y FRR
-      
-        H1 = signal.TransferFunction([((21442.0*2.0*pi)**2.0)],[1,(21442.0*2.0*pi)/6.04,(21442*2.0*pi)**2])
-        H2 = signal.TransferFunction([(14150.0*2.0*pi)**2.0],[1,(14150.0*2.0*pi)/0.41,(14150.0*2.0*pi)**2])
-        H3 = signal.TransferFunction([(18636.0*2.0*pi)**2.0],[1,(18636.0*2.0*pi)/1.84,(18636.0*2.0*pi)**2])
-        H4 = signal.TransferFunction([(10247.0*2.0*pi)**2.0],[1,(10247.0*2.0*pi)/0.54,(10247.0*2.0*pi)**2])
-       # H5= signal.TransferFunction([1/815300],1)
-       # H1= signal.TransferFunction([1.435e+20],[1,2.168e+05,2.606e+10,3.936e+15,1.435e+20])
-       # H2 = signal.TransferFunction([5.684e+19],[1,1.829e+05,2.544e+10,1.899e+15,5.684e+19])
-       # H1 = ctrl.TransferFunction([(21442.0*2.0*pi)**2.0],[1, (21442.0*2.0*pi)/123561.04, (21442*2.0*pi)**2])
-        #H2= ctrl.TransferFunction([(14150.0*2.0*pi)**2.0],[1,(14150.0*2.0*pi)/0.41,(14150.0*2.0*pi)**2])
-       # H3 = ctrl.TransferFunction([(18636.0*2.0*pi)**2.0],[1,(18636.0*2.0*pi)/1.84,(18636.0*2.0*pi)**2])
-       # H4 = ctrl.TransferFunction([(10247.0*2.0*pi)**2.0],[1,(10247.0*2.0*pi)/0.54,(10247.0*2.0*pi)**2])
-      #  H5= ctrl.TransferFunction([1/815300],1)
-       # H=H3*H4
-       # print(H)
-        #H = H1*H2*H3*H4
-        #print(H)
-        #print(H(15))
-       # H= signal.TransferFunction([3.357e+33],[1,6.717e+04,2.535e+09,7.154e+13,1.407e+18,2.074e+22,2.147e+26,1.309e+30,3.357e+33])
-        #H= signal.TransferFunction([3.357e+8],[1,6.717e+05,2.535e+04,7.154e+6,1.407e+8,2.074e+6,2.147e+6,1.309e+6,3.357e+10])
-
-
-        if(self.check_faa.get()):
-            t,y = self.FFA(H1,H2,H3,H4,y,t) #FFA me divide el vector 1.1
-            # if(self.check_frec_graficar.get()==0):
+       
+        if(self.check_faa.get()):  
+            t,y = self.FFA(H1,H2,H3,H4,y,t) #FFA me divide el vector 1.1            
             y = y[(int) (len(y)/1.7):] #recorte para ver de sacar mi transitorio que se me arma de que mi señal no viene desde menos inf
             t= t[(int) (len(t)/1.7):]
-            t=t-t[0]
-            print
-            print("1")
-
+            t=t-t[0]     
+    
         if(self.check_sample_and_hold.get()):
            y = self.sampleAndHold(FSnH,y,distanceBetweenSamples, self.Duty_SH.get()/100)
-          # if(self.check_frec_graficar.get()==0):
-          #     y = y[(int) (len(y)/2):] #recorte para ver de sacar mi transitorio que se me arma de que mi señal no viene desde menos inf
-          #     t = t[(int) (len(t)/2):]
-           
-           print("2")
+          
 
         if(self.check_llave_analog.get()):
            y = self.analogKey(FrecuenciaLLA,y,distanceBetweenSamples,self.duty_cycle_LLA.get()/100)
-           print("3")
-           print(self.duty_cycle_LLA.get()/100)
-          # if(self.check_frec_graficar.get()==0):
-           #    y = y[(int) (len(y)/2):] #recorte para ver de sacar mi transitorio que se me arma de que mi señal no viene desde menos inf
-           #    t = t[(int) (len(t)/2):]
-           
-
-        
+                
         if(self.check_fr.get()):
-            print(len(y),len(t))
-            print(t[0])
             t=t-t[0]
             t,y = self.FFA(H1,H2,H3,H4,y,t)
-            #if(self.check_frec_graficar.get()==0):
-            #  y = y[(int) (len(y)/3):] #recorte para ver de sacar mi transitorio que se me arma de que mi señal no viene desde menos inf
-            #   t = t[(int) (len(t)/3):]
            
-            print("4")
-
 
         return t,y,(int) (len(y)/10),T
 
     #3/2 sine
+    
     def threeHalfsSine(self,time,period):
         period=period*(2/3)
         distance=time[1]-time[0]    #distancia entre valores de la funcion seno. Seria el periodo utilizado para la señal continua
