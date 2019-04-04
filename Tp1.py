@@ -58,7 +58,7 @@ class TP1:
         self.Frecuency.set(1500)
         self.Frecuency.grid(row=2, column=2, padx=5, pady=5)
 
-        self.Voltage = Scale(self.ventana_derecha, from_=0, to=5, resolution=0.1, label='Vpp:', orient=HORIZONTAL)
+        self.Voltage = Scale(self.ventana_derecha, from_=0, to=10, resolution=0.1, label='Vpp:', orient=HORIZONTAL)
         self.Voltage.set(5)
         self.Voltage.grid(row=3, column=2, columnspan=1, padx=5, pady=5)
 
@@ -131,7 +131,7 @@ class TP1:
         if((self.check_tiempo_graficar.get()==0) and (self.check_frec_graficar.get()==1)):
             self.PlotInFrecuency(NuevoN,T,y)  
         
-        np.savetxt("Medicion17.2.csv", np.column_stack((t,y)), delimiter=",")
+       # np.savetxt("Medicion17.2.csv", np.column_stack((t,y)), delimiter=",")
     
     def SetEntry(self):
         N = 100000 #numero de sampleo
@@ -199,7 +199,8 @@ class TP1:
             # if(self.check_frec_graficar.get()==0):
             y = y[(int) (len(y)/1.7):] #recorte para ver de sacar mi transitorio que se me arma de que mi señal no viene desde menos inf
             t= t[(int) (len(t)/1.7):]
-            
+            t=t-t[0]
+            print
             print("1")
 
         if(self.check_sample_and_hold.get()):
@@ -222,6 +223,8 @@ class TP1:
         
         if(self.check_fr.get()):
             print(len(y),len(t))
+            print(t[0])
+            t=t-t[0]
             t,y = self.FFA(H1,H2,H3,H4,y,t)
             #if(self.check_frec_graficar.get()==0):
             #  y = y[(int) (len(y)/3):] #recorte para ver de sacar mi transitorio que se me arma de que mi señal no viene desde menos inf
